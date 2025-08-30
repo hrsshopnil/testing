@@ -22,7 +22,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: temurin   # or keep 'zulu' if you specifically need it
+          distribution: temurin   # or 'zulu' if your project explicitly needs it
           java-version: 17
 
       - name: Set up Flutter
@@ -30,6 +30,22 @@ jobs:
         with:
           channel: stable
           architecture: x64
+
+      # ✅ Cache CocoaPods for faster builds
+      - name: Cache CocoaPods
+        uses: actions/cache@v3
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      # ✅ Install CocoaPods dependencies
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod repo update
+          pod install
 
       - name: Build Android APKs
         run: flutter build apk --release --split-per-abi
@@ -50,6 +66,7 @@ jobs:
             build/ios/iphoneos/app.ipa
           tag: v1.0.${{ github.run_number }}
           token: ${{ secrets.TOKEN }}
+
 
 
 
